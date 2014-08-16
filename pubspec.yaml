@@ -1,0 +1,20 @@
+name: tyrian
+version: 0.0.1
+description:
+  A game using  play_phaser library.
+author: playif <playif@gmail.com>
+homepage: https://github.com/playif/tyrian
+dependencies:
+  browser: ">=0.10.0+2 <0.11.0"
+  play_phaser:
+    path: ../play_phaser
+
+
+transformers:
+- $dart2js:
+    checked: true
+    minify: false
+    suppressWarnings: false
+    suppressHints: false
+    terse: false
+    verbose: true
