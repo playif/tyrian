@@ -42,7 +42,7 @@ class Tyrian extends State {
       s.body.velocity.setTo(10 + Math.random() * 40, 10 + Math.random() * 40);
       //s.rotation = game.rnd.real() * 10;
       s.body.angularAcceleration=game.rnd.real() * 10;
-    } 
+    }
 
     bot = game.add.sprite(200, 200, 'tyrian', '001');
     bot.anchor.setTo(0.5);
