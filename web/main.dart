@@ -91,12 +91,14 @@ class Panel extends Group {
   bool isDragging = false;
 
   bool checkViewPort(point) {
+    Point world = this.world;
+
     num x = point.x;
     num y = point.y;
-    if (x < this.x || y < this.y) {
+    if (x < world.x || y < world.y) {
       return false;
     } else {
-      return x < this.x + _width && y < this.y + _height;
+      return x < world.x + _width && y < world.y + _height;
     }
 
     //return x>_mask.x &&
@@ -202,6 +204,12 @@ class Panel extends Group {
   }
 
   update() {
+    List<GameObject> items = _view.children;
+    for (int i = 0; i < items.length; i++) {
+      GameObject item = items[i];
+      item.update();
+    }
+
     if (_dirty) {
       updateLayout();
       _dirty = false;
@@ -210,6 +218,10 @@ class Panel extends Group {
       _view.y = _background.y;
 
     }
+  }
+
+  Rectangle getBounds([matrix]) {
+    return new Rectangle(x, y, _width, _height);
   }
 }
 
@@ -271,18 +283,18 @@ class Tyrian extends State {
       itemBorder.drawRect(1, 0, 198, 50);
       itemBorder.endFill();
 
-      Sprite btn = game.add.sprite(150, 0, '__missing');
+      Sprite btn = game.add.sprite(150, 10, '__missing');
       btn.inputEnabled = true;
       btn.input.pixelPerfectClick = true;
       num shift = p.length;
-      btn.events.onInputDown.add((sender,pointer) {
-        if(p.checkViewPort(pointer)){
+      btn.events.onInputDown.add((sender, pointer) {
+        if (p.checkViewPort(pointer)) {
           print("道具 ${shift}");
         }
       });
 
       Text text = game.make.text(100, 25, "道具 ${p.length}", font);
-//      text.anchor.setTo(0.5, 0.5);
+      text.anchor.setTo(0.5, 0.5);
 //      text.inputEnabled=true;
 //      text.events.onInputDown.add((p, e) {
 //        print("道具 ${p.length}");
@@ -305,8 +317,20 @@ class Tyrian extends State {
     p.addItem(getItem());
     p.addItem(getItem());
 
+    Panel p2 = new Panel(game);
+    p2.borderWidth = 2;
+    p2.name = "p2";
 
-    game.world.add(p);
+    p2.addItem(getItem());
+    p2.addItem(getItem());
+    p2.addItem(getItem());
+    p2.addItem(getItem());
+    p2.addItem(getItem());
+
+    //p2.position.set(50);
+    p.addItem(p2);
+
+    //game.world.add(p2);
 
     Sprite btn = game.add.sprite(200, 0, '__missing');
     btn.inputEnabled = true;
