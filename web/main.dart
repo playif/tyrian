@@ -106,6 +106,7 @@ class Panel extends Group {
 
 
   Panel(Game game, [Object key, Object frame]) : super(game) {
+
     this.layout = new VerticalLayout(this);
     this.game = game;
 
@@ -116,13 +117,15 @@ class Panel extends Group {
     _background.input.enableDrag();
     _background.input.allowHorizontalDrag = false;
     _background.events.onDragStart.add((sender, pointer) {
-      if (checkViewPort(pointer)) {
-        isDragging = true;
-      }
+      //if (checkViewPort(pointer)) {
+      isDragging = true;
+      //}
 
     });
     _background.events.onDragStop.add((sender, pointer) {
       isDragging = false;
+      Point offset = _background.input.dragOffset;
+      _background.hitArea = new Rectangle(-_background.x, -_background.y, _width, _height);
     });
 
 
@@ -181,8 +184,8 @@ class Panel extends Group {
     //Rectangle gbounds=_mask.getBounds();
 
     _view.updateTransform();
-    Rectangle bounds = _view.getBounds();
-    bounds.height = Math.max(bounds.height, _background.height);
+    Rectangle bounds = _view.getLocalBounds();
+    //bounds.height = Math.max(bounds.height, height);
     _background.width = bounds.width;
     _background.height = bounds.height;
     //_background.resize(bounds.width, bounds.height);
@@ -195,11 +198,11 @@ class Panel extends Group {
 
     //ctx.strokeRect(0, 0, bounds.width, 200);
 
-    num verticalSpace = bounds.height - _background.width;
+    num verticalSpace = bounds.height - _height;
 
 
-    _background.input.boundsRect = new Rectangle(0, -verticalSpace, _background.width, bounds.height + verticalSpace);
-
+    _background.input.boundsRect = new Rectangle(0, -verticalSpace, _width, bounds.height + verticalSpace);
+    _background.hitArea = new Rectangle(-_background.x, -_background.y, _width, _height);
 
   }
 
@@ -318,7 +321,7 @@ class Tyrian extends State {
     p.addItem(getItem());
 
     Panel p2 = new Panel(game);
-    p2.borderWidth = 2;
+    p2.borderWidth = 8;
     p2.name = "p2";
 
     p2.addItem(getItem());
