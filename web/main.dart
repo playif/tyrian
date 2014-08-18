@@ -2,7 +2,7 @@ import "package:play_phaser/phaser.dart";
 
 
 main() {
-  Game game = new Game(800, 600, WEBGL, '');
+  Game game = new Game(800, 600, CANVAS, '');
   game.state.add('tyrian', new Tyrian());
   game.state.start('tyrian');
 }
@@ -13,14 +13,20 @@ main() {
 
 class Border extends Group {
   bool _dirty = false;
-  
+  bool isDragging = false;
+
   TileSprite leftBorder;
   TileSprite rightBorder;
   TileSprite topBorder;
   TileSprite bottomBorder;
-  
+
+  Sprite leftTopCorner;
+  Sprite leftBottomCorner;
+  Sprite rightTopCorner;
+  Sprite RightBottomCorner;
+
   Panel _panel;
-  
+
   num _height = 200;
 
   num get height => _height;
@@ -38,24 +44,90 @@ class Border extends Group {
     _width = value;
     _dirty = true;
   }
-  
-  num _borderWidth=32;
-  num _borderHeight=32;
-  
-  Border(Game game, [Object key, Object frame])
-      : super(game) {
-    
-    leftBorder=game.make.tileSprite(0, _borderHeight, _borderWidth, height - _borderHeight*2, key, 0);
-    rightBorder=game.make.tileSprite(0, 0, 32, height, key, 1);
-    topBorder=game.make.tileSprite(0, 0, 32, height, key, 2);
-    bottomBorder=game.make.tileSprite(0, 0, 32, height, key, 3);
-    
-    
-    
+
+  num _borderWidth = 32;
+  num _borderHeight = 32;
+  var key;
+
+  Border(Game game, [Object key, Object frame]) : super(game) {
+    this.key = key;
+    leftBorder = game.make.tileSprite(0, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 0);
+    rightBorder = game.make.tileSprite(_width - _borderWidth, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 1);
+    topBorder = game.make.tileSprite(_borderWidth, 0, width - _borderWidth * 2, _borderHeight, key, 2);
+    bottomBorder = game.make.tileSprite(_borderWidth, height - _borderHeight, width - _borderWidth * 2, _borderHeight, key, 3);
+
+    leftTopCorner = this.create(0, 0, key, 4);
+    leftBottomCorner = this.create(0, height - _borderHeight, key, 4);
+    rightTopCorner = this.create(_width - _borderWidth, 0, key, 4);
+    RightBottomCorner = this.create(_width - _borderWidth, height - _borderHeight, key, 4);
+
+    RightBottomCorner.inputEnabled = true;
+    RightBottomCorner.input.enableDrag();
+    RightBottomCorner.events.onDragStart.add((sender, pointer) {
+      //if (checkViewPort(pointer)) {
+      isDragging = true;
+      //}
+
+    });
+    RightBottomCorner.events.onDragStop.add((sender, pointer) {
+      isDragging = false;
+      //Point offset = _background.input.dragOffset;
+      _dirty = true;
+    });
+
     this.addChild(leftBorder);
-    //this.addChild(rightBorder);
-    //this.addChild(topBorder);
-    //this.addChild(bottomBorder);
+    this.addChild(rightBorder);
+    this.addChild(topBorder);
+    this.addChild(bottomBorder);
+  }
+  
+  setPanel(Panel panel){
+    this._panel=panel;
+    panel.x=_borderWidth;
+    panel.y=_borderHeight;
+    
+    _panel.width=width - _borderWidth * 2;
+    _panel.height=height - _borderHeight * 2;
+  }
+
+  updateLayout() {
+    leftBorder.height = _height - _borderHeight * 2;
+    rightBorder.height = _height - _borderHeight * 2;
+    rightBorder.x = _width - _borderWidth;
+
+    topBorder.width = _width - _borderWidth * 2;
+    bottomBorder.width = _width - _borderWidth * 2;
+    bottomBorder.y = _height - _borderWidth;
+
+    leftBottomCorner.y = _height - _borderWidth;
+    rightTopCorner.x = _width - _borderWidth;
+
+    
+    _panel.width=width - _borderWidth * 2;
+    _panel.height=height - _borderHeight * 2;
+    //topBorder = game.make.tileSprite(_borderWidth, 0, width - _borderWidth * 2, _borderHeight, key, 2);
+    // = game.make.tileSprite(_borderWidth, height - _borderHeight, width - _borderWidth * 2, _borderHeight, key, 3);
+
+  }
+
+  update() {
+
+    if (isDragging) {
+      this._width = RightBottomCorner.x + RightBottomCorner.width;
+      this._height = RightBottomCorner.y + RightBottomCorner.height;
+      updateLayout();
+    }
+
+    if(_panel != null){
+      _panel.update();
+    }
+    //_panel.update();
+
+//    _view.children.forEach((GameObject item) {
+//      if (item is Panel) {
+//        item.update();
+//      }
+//    });
   }
 }
 
@@ -78,10 +150,13 @@ class Header extends Sprite {
     });
   }
 
+
+
   update() {
     if (isDragging && target != null) {
       target.x = this.x + offset.x;
       target.y = this.y + offset.y;
+
     }
   }
 }
@@ -190,10 +265,11 @@ class Panel extends Group {
 //    _view.input.allowHorizontalDrag = false;
 
 
-    this.addChild(_mask);
+    //this.addChild(_mask);
     this.addChild(_background);
     this.addChild(_border);
     _view = game.add.group(this);
+    //_view.addChild(_mask);
     _view.mask = _mask;
   }
 
@@ -238,7 +314,8 @@ class Panel extends Group {
 
   updateLayout() {
     layout.updateLayout();
-
+    
+    _mask.clear();
     _mask.lineWidth = 0;
 
     _mask.beginFill(0, 0);
@@ -321,11 +398,9 @@ class VerticalLayout extends Layout {
     for (int i = 0; i < items.length; i++) {
       GameObject item = items[i];
       //item.updateTransform();
-      item.width = parent.width;
+      //item.width = parent.width;
       item.y = currentY;
       currentY += item.height;
-
-
     }
   }
 }
@@ -336,24 +411,24 @@ class Tyrian extends State {
     //game.load.atlas('breakout', 'img/breakout.png', 'img/breakout.json');
 
     game.load.atlasJSONHash('tyrian', 'img/tyrian.png', 'img/tyrian.json');
-    game.load.spritesheet('ground_1x1', 'img/ground_1x1.png',32);
+    game.load.spritesheet('ground_1x1', 'img/ground_1x1.png', 32);
 
   }
 
 
   create() {
-    
+
 
 
     //game.physics.startSystem(Physics.ARCADE);
 
     game.stage.backgroundColor = 0x182d3b;
 
-    
-    Border border = new Border(game,"ground_1x1");
+
+    Border border = new Border(game, "ground_1x1");
     game.world.add(border);
-    
-    
+
+
     Panel p = new Panel(game);
     p.borderWidth = 2;
     p.position.set(50);
@@ -381,7 +456,7 @@ class Tyrian extends State {
         }
       });
 
-      Text text = game.make.text(100, 25, "道具 ${p.length}", font);
+      Text text = game.make.text(100, 25, "item ${p.length}", font);
       text.anchor.setTo(0.5, 0.5);
 //      text.inputEnabled=true;
 //      text.events.onInputDown.add((p, e) {
@@ -417,19 +492,24 @@ class Tyrian extends State {
 
     //p2.position.set(50);
     p.addItem(p2);
-
-    //game.world.add(p2);
-
-    Sprite btn = game.add.sprite(200, 0, '__missing');
-    btn.inputEnabled = true;
-    btn.events.onInputOver.add((point, e) {
-      p.addItem(getItem());
-    });
-
-    Header header = new Header(game, p, 'tyrian', 2);
-
-    game.world.add(header);
-    header.offset += p.position;
+    
+    //p.visible=false;
+    
+    border.add(p);
+    border.setPanel(p);
+//
+//    //game.world.add(p2);
+//
+//    Sprite btn = game.add.sprite(200, 0, '__missing');
+//    btn.inputEnabled = true;
+//    btn.events.onInputOver.add((point, e) {
+//      p.addItem(getItem());
+//    });
+//
+//    Header header = new Header(game, p, 'tyrian', 2);
+//
+//    //game.world.add(header);
+//    header.offset += p.position;
 
 //    Graphics mask = game.add.graphics();
 //    mask.beginFill(0, 1);
