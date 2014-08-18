@@ -11,6 +11,54 @@ main() {
 //  bool fitParent;
 //}
 
+class Border extends Group {
+  bool _dirty = false;
+  
+  TileSprite leftBorder;
+  TileSprite rightBorder;
+  TileSprite topBorder;
+  TileSprite bottomBorder;
+  
+  Panel _panel;
+  
+  num _height = 200;
+
+  num get height => _height;
+
+  set height(num value) {
+    _height = value;
+    _dirty = true;
+  }
+
+  num _width = 200;
+
+  num get width => _width;
+
+  set width(num value) {
+    _width = value;
+    _dirty = true;
+  }
+  
+  num _borderWidth=32;
+  num _borderHeight=32;
+  
+  Border(Game game, [Object key, Object frame])
+      : super(game) {
+    
+    leftBorder=game.make.tileSprite(0, _borderHeight, _borderWidth, height - _borderHeight*2, key, 0);
+    rightBorder=game.make.tileSprite(0, 0, 32, height, key, 1);
+    topBorder=game.make.tileSprite(0, 0, 32, height, key, 2);
+    bottomBorder=game.make.tileSprite(0, 0, 32, height, key, 3);
+    
+    
+    
+    this.addChild(leftBorder);
+    //this.addChild(rightBorder);
+    //this.addChild(topBorder);
+    //this.addChild(bottomBorder);
+  }
+}
+
 class Header extends Sprite {
   bool isDragging = false;
   GameObject target;
@@ -105,6 +153,7 @@ class Panel extends Group {
   }
 
 
+
   Panel(Game game, [Object key, Object frame]) : super(game) {
 
     this.layout = new VerticalLayout(this);
@@ -124,8 +173,9 @@ class Panel extends Group {
     });
     _background.events.onDragStop.add((sender, pointer) {
       isDragging = false;
-      Point offset = _background.input.dragOffset;
-      _background.hitArea = new Rectangle(-_background.x, -_background.y, _width, _height);
+      //Point offset = _background.input.dragOffset;
+      _dirty = true;
+      _background.hitArea = getHitArea();
     });
 
 
@@ -160,6 +210,30 @@ class Panel extends Group {
     _view.removeChild(item);
     _dirty = true;
     return item;
+  }
+
+  Rectangle getHitArea() {
+    Panel parent = findPanelParent(this);
+
+    if (parent != null) {
+      Rectangle hitArea = new Rectangle(x, y, _width, _height);
+      hitArea = parent.getHitArea().intersection(hitArea);
+      hitArea.offsetRect(-x, -y);
+      return hitArea;
+    } else {
+      Rectangle hitArea = new Rectangle(-_background.x, -_background.y, _width, _height);
+      return hitArea;
+    }
+  }
+
+  Panel findPanelParent(GameObject panel) {
+    if (panel == null || panel.parent == panel) {
+      return null;
+    } else if (panel.parent != null && panel.parent is Panel) {
+      return panel.parent;
+    } else {
+      return findPanelParent(panel.parent);
+    }
   }
 
   updateLayout() {
@@ -202,16 +276,12 @@ class Panel extends Group {
 
 
     _background.input.boundsRect = new Rectangle(0, -verticalSpace, _width, bounds.height + verticalSpace);
-    _background.hitArea = new Rectangle(-_background.x, -_background.y, _width, _height);
+    _background.hitArea = getHitArea();
 
   }
 
   update() {
-    List<GameObject> items = _view.children;
-    for (int i = 0; i < items.length; i++) {
-      GameObject item = items[i];
-      item.update();
-    }
+
 
     if (_dirty) {
       updateLayout();
@@ -221,6 +291,12 @@ class Panel extends Group {
       _view.y = _background.y;
 
     }
+
+    _view.children.forEach((GameObject item) {
+      if (item is Panel) {
+        item.update();
+      }
+    });
   }
 
   Rectangle getBounds([matrix]) {
@@ -260,16 +336,24 @@ class Tyrian extends State {
     //game.load.atlas('breakout', 'img/breakout.png', 'img/breakout.json');
 
     game.load.atlasJSONHash('tyrian', 'img/tyrian.png', 'img/tyrian.json');
+    game.load.spritesheet('ground_1x1', 'img/ground_1x1.png',32);
+
   }
 
 
   create() {
     
 
+
     //game.physics.startSystem(Physics.ARCADE);
 
     game.stage.backgroundColor = 0x182d3b;
 
+    
+    Border border = new Border(game,"ground_1x1");
+    game.world.add(border);
+    
+    
     Panel p = new Panel(game);
     p.borderWidth = 2;
     p.position.set(50);
