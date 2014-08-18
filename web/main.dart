@@ -14,6 +14,7 @@ main() {
 class Border extends Group {
   bool _dirty = false;
   bool isDragging = false;
+  int dragger = -1;
 
   TileSprite leftBorder;
   TileSprite rightBorder;
@@ -23,7 +24,7 @@ class Border extends Group {
   Sprite leftTopCorner;
   Sprite leftBottomCorner;
   Sprite rightTopCorner;
-  Sprite RightBottomCorner;
+  Sprite rightBottomCorner;
 
   Panel _panel;
 
@@ -47,64 +48,139 @@ class Border extends Group {
 
   num _borderWidth = 32;
   num _borderHeight = 32;
+
+  num startX = 0;
+  num startY = 0;
+
   var key;
+
+  num minWidth = 96;
+  num maxWidth = 320;
+
+  num minHeight = 96;
+  num maxHeight = 320;
+
+  Function getDragStartFunction(int dragger) {
+    return (sender, pointer) {
+      isDragging = true;
+      this.dragger = dragger;
+    };
+  }
+
+  Function getDragStopFunction() {
+    return (sender, pointer) {
+      isDragging = true;
+    };
+  }
+
+  Sprite createCorner(num x, num y, Object key, Object frame, int id) {
+    Sprite obj = this.create(x, y, key, frame);
+    obj.inputEnabled = true;
+    obj.input.enableDrag();
+    obj.input.enableSnap(32, 32);
+    obj.events.onDragStart.add(getDragStartFunction(id));
+    obj.events.onDragStop.add(getDragStopFunction());
+    return obj;
+  }
+
+  TileSprite createBorder(num x, num y, num width, num height, Object key, Object frame, int id) {
+    TileSprite obj = game.make.tileSprite(x, y, width, height, key, frame);
+    obj.inputEnabled = true;
+    obj.input.enableDrag();
+    obj.input.enableSnap(32, 32);
+    obj.events.onDragStart.add(getDragStartFunction(id));
+    obj.events.onDragStop.add(getDragStopFunction());
+    return obj;
+  }
 
   Border(Game game, [Object key, Object frame]) : super(game) {
     this.key = key;
-    leftBorder = game.make.tileSprite(0, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 0);
-    rightBorder = game.make.tileSprite(_width - _borderWidth, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 1);
-    topBorder = game.make.tileSprite(_borderWidth, 0, width - _borderWidth * 2, _borderHeight, key, 2);
-    bottomBorder = game.make.tileSprite(_borderWidth, height - _borderHeight, width - _borderWidth * 2, _borderHeight, key, 3);
 
-    leftTopCorner = this.create(0, 0, key, 4);
-    leftBottomCorner = this.create(0, height - _borderHeight, key, 4);
-    rightTopCorner = this.create(_width - _borderWidth, 0, key, 4);
-    RightBottomCorner = this.create(_width - _borderWidth, height - _borderHeight, key, 4);
+    //Group elements
 
-    RightBottomCorner.inputEnabled = true;
-    RightBottomCorner.input.enableDrag();
-    RightBottomCorner.events.onDragStart.add((sender, pointer) {
-      //if (checkViewPort(pointer)) {
-      isDragging = true;
-      //}
+    leftBorder = createBorder(0, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 8, 0);// game.make.tileSprite(0, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 0);
+    rightBorder = createBorder(_width - _borderWidth, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 10, 1);// game.make.tileSprite(_width - _borderWidth, _borderHeight, _borderWidth, height - _borderHeight * 2, key, 1);
+    topBorder = createBorder(_borderWidth, 0, width - _borderWidth * 2, _borderHeight, key, 1, 2); // game.make.tileSprite(_borderWidth, 0, width - _borderWidth * 2, _borderHeight, key, 2);
+    bottomBorder = createBorder(_borderWidth, height - _borderHeight, width - _borderWidth * 2, _borderHeight, key, 17, 3);//  game.make.tileSprite(_borderWidth, height - _borderHeight, width - _borderWidth * 2, _borderHeight, key, 3);
 
-    });
-    RightBottomCorner.events.onDragStop.add((sender, pointer) {
-      isDragging = false;
-      //Point offset = _background.input.dragOffset;
-      _dirty = true;
-    });
+    leftTopCorner = createCorner(0, 0, key, 0, 4);
+    leftBottomCorner = createCorner(0, height - _borderHeight, key, 16, 5);
+    //leftBottomCorner.input.boundsRect = new Rectangle(_width - minWidth, _height - minHeight, maxWidth - minWidth, maxHeight - minHeight);
+
+
+    rightTopCorner = createCorner(_width - _borderWidth, 0, key, 2, 6);
+
+
+    rightBottomCorner = createCorner(_width - _borderWidth, height - _borderHeight, key, 18, 7);
+    //rightBottomCorner.input.boundsRect = new Rectangle(_width - minWidth, _height - minHeight, maxWidth - minWidth, maxHeight - minHeight);
+
+    //    RightBottomCorner.inputEnabled = true;
+    //    RightBottomCorner.input.enableDrag();
+    //    RightBottomCorner.input.boundsRect = new Rectangle(_width - minWidth, _height - minHeight, maxWidth - minWidth, maxHeight - minHeight);
+    //    RightBottomCorner.events.onDragStart.add((sender, pointer) {
+    //      //if (checkViewPort(pointer)) {
+    //      isDragging = true;
+    //      //}
+    //
+    //    });
+    //    RightBottomCorner.events.onDragStop.add((sender, pointer) {
+    //      isDragging = false;
+    //      //Point offset = _background.input.dragOffset;
+    //      _dirty = true;
+    //    });
+
+
 
     this.addChild(leftBorder);
     this.addChild(rightBorder);
     this.addChild(topBorder);
     this.addChild(bottomBorder);
   }
-  
-  setPanel(Panel panel){
-    this._panel=panel;
-    panel.x=_borderWidth;
-    panel.y=_borderHeight;
-    
-    _panel.width=width - _borderWidth * 2;
-    _panel.height=height - _borderHeight * 2;
+
+  setPanel(Panel panel) {
+    this._panel = panel;
+    panel.x = _borderWidth;
+    panel.y = _borderHeight;
+
+    _panel.width = width - _borderWidth * 2;
+    _panel.height = height - _borderHeight * 2;
   }
 
   updateLayout() {
     leftBorder.height = _height - _borderHeight * 2;
+    leftBorder.x = startX;
+    leftBorder.y = _borderHeight + startY;
+
     rightBorder.height = _height - _borderHeight * 2;
-    rightBorder.x = _width - _borderWidth;
+    rightBorder.x = _width - _borderWidth + startX;
+    rightBorder.y = _borderHeight + startY;
 
     topBorder.width = _width - _borderWidth * 2;
+    topBorder.x = _borderWidth + startX;
+    topBorder.y = startY;
+
     bottomBorder.width = _width - _borderWidth * 2;
-    bottomBorder.y = _height - _borderWidth;
+    bottomBorder.x = _borderWidth + startX;
+    bottomBorder.y = _height - _borderHeight + startY;
 
-    leftBottomCorner.y = _height - _borderWidth;
-    rightTopCorner.x = _width - _borderWidth;
 
-    
-    _panel.width=width - _borderWidth * 2;
-    _panel.height=height - _borderHeight * 2;
+    rightTopCorner.x = _width - _borderWidth + startX;
+    rightTopCorner.y = startY;
+
+    leftBottomCorner.x = startX;
+    leftBottomCorner.y = _height - _borderHeight + startY;
+
+    rightBottomCorner.x = _width - _borderWidth + startX;
+    rightBottomCorner.y = _height - _borderHeight + startY;
+
+    leftTopCorner.x = startX;
+    leftTopCorner.y = startY;
+
+    _panel.width = width - _borderWidth * 2;
+    _panel.height = height - _borderHeight * 2;
+    _panel.x = _borderWidth + startX;
+    _panel.y = _borderHeight + startY;
+
     //topBorder = game.make.tileSprite(_borderWidth, 0, width - _borderWidth * 2, _borderHeight, key, 2);
     // = game.make.tileSprite(_borderWidth, height - _borderHeight, width - _borderWidth * 2, _borderHeight, key, 3);
 
@@ -112,26 +188,121 @@ class Border extends Group {
 
   update() {
 
-    if (isDragging) {
-      this._width = RightBottomCorner.x + RightBottomCorner.width;
-      this._height = RightBottomCorner.y + RightBottomCorner.height;
+    if (isDragging || _dirty) {
+      switch (dragger) {
+        //right-bottom
+        case 7:
+          this._width = rightBottomCorner.x + rightBottomCorner.width - startX;
+          this._height = rightBottomCorner.y + rightBottomCorner.height - startY;
+          break;
+        //right-top
+        case 6:
+          this._width = rightTopCorner.x + rightTopCorner.width - startX;
+          this._height = rightBottomCorner.y + rightBottomCorner.height - rightTopCorner.y;
+
+          this.startY = rightTopCorner.y;
+          break;
+        //left-bottom
+        case 5:
+          this._width = rightBottomCorner.x + rightBottomCorner.width - leftBottomCorner.x;
+          this._height = leftBottomCorner.y + leftBottomCorner.height - startY;
+
+          this.startX = leftBottomCorner.x;
+          break;
+        //left-top
+        case 4:
+          this._width = rightTopCorner.x + rightTopCorner.width - leftTopCorner.x;
+          this._height = leftBottomCorner.y + leftBottomCorner.height - leftTopCorner.y;
+
+          this.startX = leftTopCorner.x;
+          this.startY = leftTopCorner.y;
+          break;
+
+        //bottom border
+        case 3:
+          this._height = bottomBorder.y + bottomBorder.height - startY;
+          break;
+
+        //top border
+        case 2:
+          this.startY = topBorder.y;
+          this._height = bottomBorder.y + bottomBorder.height - startY;
+          break;
+
+        //right border
+        case 1:
+          this._width = rightBorder.x + rightBorder.width - startX;
+          break;
+
+        //left border
+        case 0:
+          this.startX = leftBorder.x;
+          this._width = rightBorder.x + rightBorder.width - startX;
+          break;
+      }
+
+      bool left = (dragger == 0 || dragger == 4 || dragger == 5);
+      bool right = (dragger == 1 || dragger == 6 || dragger == 7);
+      bool top = (dragger == 2 || dragger == 4 || dragger == 6);
+      bool bottom = (dragger == 3 || dragger == 5 || dragger == 7);
+      bool w = right && !left;
+      bool h = !top && bottom;
+
+      if (_width > maxWidth) {
+        if (w) {
+          startX += _width - maxWidth;
+        }
+        _width = maxWidth;
+      } else if (_width < minWidth) {
+        if (w) {
+          startX += _width - minWidth;
+        }
+        _width = minWidth;
+      }
+
+      if (_height > maxHeight) {
+        if (h) {
+          startY += _height - maxHeight;
+        }
+        _height = maxHeight;
+      } else if (_height < minHeight) {
+        if (h) {
+          startY += _height - minHeight;
+        }
+        _height = minHeight;
+      }
+
+      //this._width = Math.max(minWidth, Math.min(this._width, maxWidth));
+      //this._height = Math.max(minHeight, Math.min(this._height, maxHeight));
+
+
+
       updateLayout();
+
+      if (_panel != null) {
+        _panel._dirty = true;
+      }
+
+      _dirty = false;
     }
 
-    if(_panel != null){
+    if (_panel != null) {
       _panel.update();
     }
+
+
     //_panel.update();
 
-//    _view.children.forEach((GameObject item) {
-//      if (item is Panel) {
-//        item.update();
-//      }
-//    });
+    //    _view.children.forEach((GameObject item) {
+    //      if (item is Panel) {
+    //        item.update();
+    //      }
+    //    });
   }
 }
 
 class Header extends Sprite {
+  bool _dirty = false;
   bool isDragging = false;
   GameObject target;
   Point offset = new Point();
@@ -147,16 +318,17 @@ class Header extends Sprite {
     });
     events.onDragStop.add((p, e) {
       isDragging = false;
+      _dirty = true;
     });
   }
 
 
 
   update() {
-    if (isDragging && target != null) {
+    if ((isDragging || _dirty) && target != null) {
       target.x = this.x + offset.x;
       target.y = this.y + offset.y;
-
+      _dirty = false;
     }
   }
 }
@@ -165,7 +337,7 @@ class Panel extends Group {
   Game game;
   Layout layout;
   Graphics _mask;
-  Graphics _border;
+  //  Graphics _border;
 
   Group _view;
   TileSprite _background;
@@ -255,19 +427,19 @@ class Panel extends Group {
 
 
     _mask = game.make.graphics(0, 0);
-    _border = game.make.graphics(0, 0);
+    //    _border = game.make.graphics(0, 0);
 
     _background.mask = _mask;
 
-//    _view.loadTexture(_background);
-//    _view.inputEnabled = true;
-//    _view.input.enableDrag();
-//    _view.input.allowHorizontalDrag = false;
+    //    _view.loadTexture(_background);
+    //    _view.inputEnabled = true;
+    //    _view.input.enableDrag();
+    //    _view.input.allowHorizontalDrag = false;
 
 
-    //this.addChild(_mask);
+    this.addChild(_mask);
     this.addChild(_background);
-    this.addChild(_border);
+    //    this.addChild(_border);
     _view = game.add.group(this);
     //_view.addChild(_mask);
     _view.mask = _mask;
@@ -277,6 +449,7 @@ class Panel extends Group {
   GameObject addItem(GameObject item) {
     //super.addChild(item);
     _view.addChild(item);
+    item.anchor.set(0.5);
     _dirty = true;
     return item;
   }
@@ -294,7 +467,8 @@ class Panel extends Group {
     if (parent != null) {
       Rectangle hitArea = new Rectangle(x, y, _width, _height);
       hitArea = parent.getHitArea().intersection(hitArea);
-      hitArea.offsetRect(-x, -y);
+      hitArea.offsetRect(-x - _background.x, -y - _background.y);
+      //game.debug.rectangle(hitArea);
       return hitArea;
     } else {
       Rectangle hitArea = new Rectangle(-_background.x, -_background.y, _width, _height);
@@ -314,7 +488,7 @@ class Panel extends Group {
 
   updateLayout() {
     layout.updateLayout();
-    
+
     _mask.clear();
     _mask.lineWidth = 0;
 
@@ -322,15 +496,17 @@ class Panel extends Group {
     _mask.drawRect(0, 0, _width, _height);
     _mask.endFill();
 
-    _border.lineWidth = _borderWidth;
-    _border.lineColor = _borderColor;
+
+    //    _border.clear();
+    //    _border.lineWidth = _borderWidth;
+    //    _border.lineColor = _borderColor;
     //_border.beginFill(_borderColor, 0);
-    _border.drawRect(-_borderWidth, -_borderWidth, _width + 2 * _borderWidth, _height + 2 * _borderWidth);
+    //    _border.drawRect(-_borderWidth, -_borderWidth, _width + 2 * _borderWidth, _height + 2 * _borderWidth);
     //_border.endFill();
 
-//      Rectangle bound=_mask.getBounds();
-//      _texture.resize(bound.width, bound.height);
-//      _texture.renderXY(_mask, 0, 0, true);
+    //      Rectangle bound=_mask.getBounds();
+    //      _texture.resize(bound.width, bound.height);
+    //      _texture.renderXY(_mask, 0, 0, true);
     //var texture = _mask.generateTexture();
     //Rectangle gbounds=_mask.getBounds();
 
@@ -340,11 +516,11 @@ class Panel extends Group {
     _background.width = bounds.width;
     _background.height = bounds.height;
     //_background.resize(bounds.width, bounds.height);
-//
-//    var ctx = _background.ctx;
-//    ctx.strokeStyle = "red";
-//    ctx.fillStyle = "green";
-//    ctx.lineWidth = _borderWidth;
+    //
+    //    var ctx = _background.ctx;
+    //    ctx.strokeStyle = "red";
+    //    ctx.fillStyle = "green";
+    //    ctx.lineWidth = _borderWidth;
     //ctx.fillRect(0, 0, bounds.width, bounds.height);
 
     //ctx.strokeRect(0, 0, bounds.width, 200);
@@ -362,11 +538,10 @@ class Panel extends Group {
 
     if (_dirty) {
       updateLayout();
-      _dirty = false;
     }
-    if (isDragging) {
+    if (isDragging || _dirty) {
       _view.y = _background.y;
-
+      _dirty = false;
     }
 
     _view.children.forEach((GameObject item) {
@@ -398,7 +573,7 @@ class VerticalLayout extends Layout {
     for (int i = 0; i < items.length; i++) {
       GameObject item = items[i];
       //item.updateTransform();
-      //item.width = parent.width;
+      item.width = parent.width;
       item.y = currentY;
       currentY += item.height;
     }
@@ -412,7 +587,7 @@ class Tyrian extends State {
 
     game.load.atlasJSONHash('tyrian', 'img/tyrian.png', 'img/tyrian.json');
     game.load.spritesheet('ground_1x1', 'img/ground_1x1.png', 32);
-
+    game.load.spritesheet('tmw_desert_spacing', 'img/tmw_desert_spacing.png', 32, 32, -1, 1, 1);
   }
 
 
@@ -425,8 +600,7 @@ class Tyrian extends State {
     game.stage.backgroundColor = 0x182d3b;
 
 
-    Border border = new Border(game, "ground_1x1");
-    game.world.add(border);
+
 
 
     Panel p = new Panel(game);
@@ -458,10 +632,10 @@ class Tyrian extends State {
 
       Text text = game.make.text(100, 25, "item ${p.length}", font);
       text.anchor.setTo(0.5, 0.5);
-//      text.inputEnabled=true;
-//      text.events.onInputDown.add((p, e) {
-//        print("道具 ${p.length}");
-//      });
+      //      text.inputEnabled=true;
+      //      text.events.onInputDown.add((p, e) {
+      //        print("道具 ${p.length}");
+      //      });
 
 
 
@@ -492,141 +666,142 @@ class Tyrian extends State {
 
     //p2.position.set(50);
     p.addItem(p2);
-    
+
     //p.visible=false;
-    
+    Border border = new Border(game, "tmw_desert_spacing");
+    game.world.add(border);
     border.add(p);
     border.setPanel(p);
-//
-//    //game.world.add(p2);
-//
-//    Sprite btn = game.add.sprite(200, 0, '__missing');
-//    btn.inputEnabled = true;
-//    btn.events.onInputOver.add((point, e) {
-//      p.addItem(getItem());
-//    });
-//
-//    Header header = new Header(game, p, 'tyrian', 2);
-//
-//    //game.world.add(header);
-//    header.offset += p.position;
+    //
+    //    //game.world.add(p2);
+    //
+    //    Sprite btn = game.add.sprite(200, 0, '__missing');
+    //    btn.inputEnabled = true;
+    //    btn.events.onInputOver.add((point, e) {
+    //      p.addItem(getItem());
+    //    });
+    //
+    //Header header = new Header(game, border, '', 2);
 
-//    Graphics mask = game.add.graphics();
-//    mask.beginFill(0, 1);
-//    mask.drawRect(0, 0, 200, 200);
-//    mask.endFill();
-//
-//    //mask.position.setTo(20, 20);
-//
-//    Graphics box = game.add.graphics();
-//    //box.boundsPadding=0;
-//
-//
-//    box.lineStyle(0, 0xff00ff);
-//    box.beginFill(0, 0.4);
-//    box.drawRect(0, 0, 200, 200);
-//    box.endFill();
+    //game.world.add(header);
+    //header.offset += p.position;
 
-//    box.moveTo(100, 100);
-//    box.bezierCurveTo(0, 0, 200, 10, 200, 200);
-//    box.bezierCurveTo(200, 200, 10, 200, 600, 500);
-//
-//    TextStyle font = new TextStyle(fill:'white', font:'24px 微軟正黑體');
-//
-//    Sprite sp = game.add.sprite(0, 0, new BitmapData(game, '', 200, 200));
-//    //sp.width
-//    //RenderTexture rt=new RenderTexture(game,200,200);
-//
-//    Graphics getItem() {
-//      Graphics itemBorder = game.make.graphics();
-//      itemBorder.lineStyle(0, 0xff00ff);
-//      itemBorder.beginFill(0, 0.4);
-//      itemBorder.drawRect(0, 0, 200, 50);
-//      itemBorder.endFill();
-//
-//      Text text = game.make.text(100, 25, "道具", font);
-//      text.anchor.setTo(0.5, 0.5);
-//
-//      itemBorder.addChild(text);
-//      itemBorder.y += 50 * sp.children.length;
-//
-//      return itemBorder;
-//    }
-//
-//
-//    sp.addChild(getItem());
-//
-//    sp.addChild(getItem());
-//
-//    sp.addChild(getItem());
-//
-//    sp.addChild(getItem());
-//
-//    sp.addChild(getItem());
-//    //sp.position.setTo(0, 0);
-//
-//    box.position.setTo(200);
-//    box.addChild(sp);
-//    //sp.position.setTo(200);
-//    //sp.addChild(box);
-//
-//    box.addChild(mask);
+    //    Graphics mask = game.add.graphics();
+    //    mask.beginFill(0, 1);
+    //    mask.drawRect(0, 0, 200, 200);
+    //    mask.endFill();
+    //
+    //    //mask.position.setTo(20, 20);
+    //
+    //    Graphics box = game.add.graphics();
+    //    //box.boundsPadding=0;
+    //
+    //
+    //    box.lineStyle(0, 0xff00ff);
+    //    box.beginFill(0, 0.4);
+    //    box.drawRect(0, 0, 200, 200);
+    //    box.endFill();
+
+    //    box.moveTo(100, 100);
+    //    box.bezierCurveTo(0, 0, 200, 10, 200, 200);
+    //    box.bezierCurveTo(200, 200, 10, 200, 600, 500);
+    //
+    //    TextStyle font = new TextStyle(fill:'white', font:'24px 微軟正黑體');
+    //
+    //    Sprite sp = game.add.sprite(0, 0, new BitmapData(game, '', 200, 200));
+    //    //sp.width
+    //    //RenderTexture rt=new RenderTexture(game,200,200);
+    //
+    //    Graphics getItem() {
+    //      Graphics itemBorder = game.make.graphics();
+    //      itemBorder.lineStyle(0, 0xff00ff);
+    //      itemBorder.beginFill(0, 0.4);
+    //      itemBorder.drawRect(0, 0, 200, 50);
+    //      itemBorder.endFill();
+    //
+    //      Text text = game.make.text(100, 25, "道具", font);
+    //      text.anchor.setTo(0.5, 0.5);
+    //
+    //      itemBorder.addChild(text);
+    //      itemBorder.y += 50 * sp.children.length;
+    //
+    //      return itemBorder;
+    //    }
+    //
+    //
+    //    sp.addChild(getItem());
+    //
+    //    sp.addChild(getItem());
+    //
+    //    sp.addChild(getItem());
+    //
+    //    sp.addChild(getItem());
+    //
+    //    sp.addChild(getItem());
+    //    //sp.position.setTo(0, 0);
+    //
+    //    box.position.setTo(200);
+    //    box.addChild(sp);
+    //    //sp.position.setTo(200);
+    //    //sp.addChild(box);
+    //
+    //    box.addChild(mask);
 
     //box.events=new Events(box);
     //box.events.onInputOver=new Signal();
-//    sp.events.onInputOver.add((p,e){
-//      print("hi");
-//      box.y-=10;
-//    });
-//    box.mask = mask;
-//    // sp.mask=mask;
-//
-//
-//    sp.inputEnabled = true;
-//    sp.input.enableDrag();
-//    sp.input.allowHorizontalDrag = false;
-//    sp.input.boundsRect = new Rectangle(0, -50, 200, 250);
+    //    sp.events.onInputOver.add((p,e){
+    //      print("hi");
+    //      box.y-=10;
+    //    });
+    //    box.mask = mask;
+    //    // sp.mask=mask;
+    //
+    //
+    //    sp.inputEnabled = true;
+    //    sp.input.enableDrag();
+    //    sp.input.allowHorizontalDrag = false;
+    //    sp.input.boundsRect = new Rectangle(0, -50, 200, 250);
 
-//    sp.events.onDragStart.add((p,e){
-//      print("hi");
-//      sp.y-=10;
-//    });
+    //    sp.events.onDragStart.add((p,e){
+    //      print("hi");
+    //      sp.y-=10;
+    //    });
 
     //box.addChild(sp);
     //game.world.add(sp);
 
     //box.position.setTo(100, 100);
 
-//game.add.image(0, 0, 'starwars');
+    //game.add.image(0, 0, 'starwars');
 
-//    game.add.image(0, 0, 'starwars');
-//    game.add.image(0, 300, 'spaceship');
-//    game.add.image(700, 360, 'test');
+    //    game.add.image(0, 0, 'starwars');
+    //    game.add.image(0, 300, 'spaceship');
+    //    game.add.image(700, 360, 'test');
 
-//    aliens = game.add.group();
-//    aliens.enableBody = true;
-//
-//    for (var i = 0; i < 200; i++) {
-//      int frame = game.rnd.integerInRange(0, 150);
-//      Sprite s = aliens.create(game.world.randomX, game.world.randomY, 'tyrian', frame);
-//      s.scale.set(1);
-//      s.anchor.setTo(0.5);
-//      s.body.collideWorldBounds = true;
-//      s.body.bounce.set(1);
-//      s.body.velocity.setTo(10 + Math.random() * 40, 10 + Math.random() * 40);
-//      //s.rotation = game.rnd.real() * 10;
-//      s.body.angularAcceleration=game.rnd.real() * 10;
-//    }
-//
-//    bot = game.add.sprite(200, 200, 'tyrian', '001');
-//    bot.anchor.setTo(0.5);
-//    game.physics.arcade.enableBody(bot);
-//    bot.body.angularAcceleration=game.rnd.real() * 10;
-//    bot.body.allowRotation=true;
-//
-//    bot.body.velocity.setTo(1, 20);
-//
-//    cursors = game.input.keyboard.createCursorKeys();
+    //    aliens = game.add.group();
+    //    aliens.enableBody = true;
+    //
+    //    for (var i = 0; i < 200; i++) {
+    //      int frame = game.rnd.integerInRange(0, 150);
+    //      Sprite s = aliens.create(game.world.randomX, game.world.randomY, 'tyrian', frame);
+    //      s.scale.set(1);
+    //      s.anchor.setTo(0.5);
+    //      s.body.collideWorldBounds = true;
+    //      s.body.bounce.set(1);
+    //      s.body.velocity.setTo(10 + Math.random() * 40, 10 + Math.random() * 40);
+    //      //s.rotation = game.rnd.real() * 10;
+    //      s.body.angularAcceleration=game.rnd.real() * 10;
+    //    }
+    //
+    //    bot = game.add.sprite(200, 200, 'tyrian', '001');
+    //    bot.anchor.setTo(0.5);
+    //    game.physics.arcade.enableBody(bot);
+    //    bot.body.angularAcceleration=game.rnd.real() * 10;
+    //    bot.body.allowRotation=true;
+    //
+    //    bot.body.velocity.setTo(1, 20);
+    //
+    //    cursors = game.input.keyboard.createCursorKeys();
   }
 
   update() {
@@ -636,8 +811,8 @@ class Tyrian extends State {
   }
 
   render() {
-//    game.debug.quadTree(game.physics.arcade.quadTree);
-//    game.debug.body(bot);
+    //    game.debug.quadTree(game.physics.arcade.quadTree);
+    //    game.debug.body(bot);
   }
 
   shutdown() {
