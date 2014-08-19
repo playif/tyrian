@@ -669,7 +669,7 @@ class Tyrian extends State {
 
     //p.visible=false;
     Border border = new Border(game, "tmw_desert_spacing");
-    border.rotation=1;
+    //border.rotation=1;
     border.anchor.set(1);
     game.world.add(border);
     border.add(p);
