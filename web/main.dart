@@ -98,9 +98,10 @@ class Flight extends Sprite implements Entity {
     this.isEnemy = isEnemy;
     this.flightType = type;
     this.MHP = this.HP = type.MHP;
+    this.nextFireTime=0;
     //this._fire=fire;
     if (this.isEnemy) {
-      this.rotation=Math.PI;
+      this.rotation = Math.PI;
     }
   }
 
@@ -109,9 +110,9 @@ class Flight extends Sprite implements Entity {
 typedef FireFunc(Flight flight, [target]);
 
 class FlightType {
-  num fireCD = 1000;
+  num fireCD = 4000;
   num MHP = 2;
-  Object frame = "011";
+  Object frame = "051";
   Function fire = basicFire;
 
   static FlightType BasicFlight = new FlightType();
@@ -133,8 +134,8 @@ class FlightType {
 
 class BulletType {
   num damage = 1;
-  Object frame = "bullets/ball";
-  Point velocity = new Point(0, -1000);
+  Object frame = "bullets/bullet_1";
+  Point velocity = new Point(0, -200);
 
   static BulletType basicBullet = new BulletType();
 }
@@ -142,7 +143,7 @@ class BulletType {
 class Weapon {
   Flight flight;
   Point shift = new Point();
-  num cdTime = 1000;
+  num cdTime = 2000;
   num cdCounter = 0;
 
   Weapon(Flight flight) {
@@ -258,7 +259,7 @@ class Tyrian extends State {
 
     //  An explosion pool
     explosions = game.add.group();
-    explosions.createMultiple(30, 'kaboom');
+    explosions.createMultiple(200, 'kaboom');
     explosions.forEach(setupInvader);
     //game.scale.s
 
@@ -294,11 +295,15 @@ class Tyrian extends State {
 
     enemyBullets.createMultiple(1000);
 
-    Flight flight = playerFlights.getFirstExists(false);
-    flight.resetFlight(200, 700, FlightType.BasicFlight);
+    for (int i = 0;i < 20;i++) {
 
-    Flight enemy = enemyFlights.getFirstExists(false);
-    enemy.resetFlight(200, 200, FlightType.BasicFlight, true);
+
+      Flight flight = playerFlights.getFirstExists(false);
+      flight.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(400, 800), FlightType.BasicFlight);
+
+      Flight enemy = enemyFlights.getFirstExists(false);
+      enemy.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(0, 400), FlightType.BasicFlight, true);
+    }
 
 
 //    Panel p = new VerticalPanel(game);
@@ -522,6 +527,7 @@ class Tyrian extends State {
   setupInvader(Sprite invader) {
     invader.anchor.x = 0.5;
     invader.anchor.y = 0.5;
+    invader.scale.set(0.3);
     invader.animations.add('kaboom');
   }
 
@@ -529,6 +535,29 @@ class Tyrian extends State {
     game.physics.arcade.overlap(enemyBullets, playerFlights, collisionHandler);
     game.physics.arcade.overlap(playerBullets, enemyFlights, collisionHandler);
 
+    if (game.time.now > addFlight) {
+      addFlight = game.time.now + 20;
+      if (playerFlights.countLiving() < enemyFlights.countLiving()) {
+        Flight flight = playerFlights.getFirstExists(false);
+        if (flight != null) {
+          flight.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(400, 800), FlightType.BasicFlight);
+          flight.body.velocity.setTo(game.rnd.integerInRange(0, 100)-50, 0);
+          flight.body.collideWorldBounds = true;
+          flight.body.bounce.set(1.0);
+        }
+      }
+      else {
+        Flight enemy = enemyFlights.getFirstExists(false);
+        if (enemy != null) {
+          enemy.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(0, 400), FlightType.BasicFlight, true);
+          enemy.body.velocity.setTo(game.rnd.integerInRange(0, 100)-50, 0);
+          enemy.body.collideWorldBounds = true;
+          enemy.body.bounce.set(1.0);
+        }
+      }
+
+
+    }
 
 //    Point p = game.input.position;
 //    //game.input.mousePointer.justReleased()
@@ -542,6 +571,8 @@ class Tyrian extends State {
     //bot.x+=1;
   }
 
+  num addFlight = 0;
+
   collisionHandler(Bullet bullet, Flight flight) {
 
     //  When a bullet hits an alien we kill them both
@@ -549,12 +580,13 @@ class Tyrian extends State {
     flight.HP -= bullet.bulletType.damage;
 
     var explosion = explosions.getFirstExists(false);
-    explosion.reset(bullet.x, bullet.y);
+    explosion.reset(flight.x, flight.y);
     explosion.play('kaboom', 30, false, true);
 
     if (flight.HP <= 0) {
       flight.kill();
     }
+
 
     //flight.kill();
 
