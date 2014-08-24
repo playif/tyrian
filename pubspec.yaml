@@ -9,7 +9,6 @@ dependencies:
   play_phaser:
     path: ../play_phaser
 
-
 transformers:
 - $dart2js:
     checked: true
