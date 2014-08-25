@@ -1,6 +1,6 @@
 import "package:play_phaser/phaser.dart";
 
-import "ui.dart";
+
 
 main() {
   Game game = new Game(480, 800, WEBGL, '');
