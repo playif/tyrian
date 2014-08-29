@@ -24,7 +24,7 @@ class Bar extends TileSprite {
   num maxValue;
 
   Bar(Game game, Entity entity, [num width = 10, num height = 5, int barType = 0, num maxValue = 10, Object key, Object frame])
-      : super(game, 0, 0, 12, 20, key, frame) {
+  : super(game, 0, 0, 12, 20, key, frame) {
     this.entity = entity;
     this.barType = barType;
     this.maxValue = maxValue;
@@ -35,8 +35,8 @@ class Bar extends TileSprite {
 
 class Flight extends Sprite implements Entity {
   num HP = 3,
-      MHP = 3,
-      team = 0;
+  MHP = 3,
+  team = 0;
   Group<Bullet> bullets;
 
 //  List<Weapon> weapons = new List<Weapon>();
@@ -60,7 +60,7 @@ class Flight extends Sprite implements Entity {
   }
 
   Flight(Game game, bullets, [Object key, Object frame])
-      : super(game, 0, 0, key, frame) {
+  : super(game, 0, 0, key, frame) {
     this.bullets = bullets;
     this.key = key;
   }
@@ -161,7 +161,7 @@ class Bullet extends Sprite {
   var target;
 
   Bullet(Game game, [Object key, Object frame])
-      : super(game, 0, 0, key, frame) {
+  : super(game, 0, 0, key, frame) {
     this.key = key;
     //game.physics.enable(this);
     //this.group=group;
@@ -193,19 +193,19 @@ class Bullet extends Sprite {
 
 class FlightInfo {
   num x = 0,
-      y = 0;
+  y = 0;
   int FlightType = 0;
 
 }
 
 class Unit extends Sprite {
-  int hp=1;
-  int mv=1;
-  int ap=1;
-  int dp=1;
-  
+  int hp = 1;
+  int mv = 1;
+  int ap = 1;
+  int dp = 1;
+
   Unit(Game game) : super(game) {
-    
+
   }
 }
 
@@ -217,6 +217,9 @@ class Tyrian extends State {
     game.load.atlasJSONHash('tyrian', 'img/tyrian.png', 'img/tyrian.json');
     game.load.spritesheet('ground_1x1', 'img/ground_1x1.png', 32);
     game.load.spritesheet('tmw_desert_spacing', 'img/tmw_desert_spacing.png', 32, 32, -1, 1, 1);
+
+    game.load.tilemap('test', 'img/test.json', null, Tilemap.TILED_JSON);
+    game.load.image('piroto', 'img/piroto.png');
   }
 
   Key k;
@@ -258,6 +261,8 @@ class Tyrian extends State {
 
   Graphics g;
   Text t;
+  Tilemap map;
+
 
   create() {
     game.time.advancedTiming = true;
@@ -271,6 +276,20 @@ class Tyrian extends State {
     //game.physics.startSystem(Physics.ARCADE);
 
     game.stage.backgroundColor = 0x101010;
+
+
+    map = game.add.tilemap("test");
+    map.addTilesetImage('piroto', 'piroto');
+
+    map.createLayer('map').scale.set(1.5);
+    map.createLayer('units').scale.set(1.5);
+    map.createLayer('collide')..scale.set(1.5)..alpha = 0.5;
+
+
+    //map.createLayer('collide');
+    //Tile tile = map.layers[0].data[0][0];
+
+
 //
 //    //  An explosion pool
 //    explosions = game.add.group();
@@ -319,9 +338,9 @@ class Tyrian extends State {
 
 
     g = game.add.graphics(0, 0);
-    
-    TextStyle ts=new TextStyle(fill:"white",stroke:"red",strokeThickness: 4);
-    
+
+    TextStyle ts = new TextStyle(fill:"white", stroke:"red", strokeThickness: 4);
+
     t = game.add.text(40, 40, "QQ", ts);
 
 
@@ -559,6 +578,7 @@ class Tyrian extends State {
   }
 
   num addFlight = 0;
+
   update() {
 //    playerFlights.forEach((Flight f) {
 //      f.x += 1;
@@ -616,8 +636,8 @@ class Tyrian extends State {
     g.lineAlpha = 1;
     //g.alpha=0.5;
     num cell = 60;
-    for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
+    for (int i = 0; i < 12; i++) {
+      for (int j = 0; j < 12; j++) {
         g.drawRect(cell * i, cell * j, cell, cell);
       }
     }
@@ -627,12 +647,25 @@ class Tyrian extends State {
     for (int i = -range; i <= range; i++) {
       for (int j = -range; j <= range; j++) {
         if ((i.abs() + j.abs()) > range) continue;
-        g.drawRect(cell * (x + i), cell * (y + j), cell, cell);
+        int lx = x + i, ly = y + j;
+        if(lx<0 || lx >= 12 || ly<0 || ly >= 12) continue;
+        Tile tile = map.layers[2].data[ly][lx];
+        String key=(tile.index-1).toString();
+        if(map.tilesets[0].tileProperties.containsKey(key)){
+          bool collide = map.tilesets[0].tileProperties[key]["collide"] == "1";
+          if(collide) continue;
+        }
+
+        //map.layers[2].data
+
+        //if()
+        g.drawRect(cell * lx, cell * ly, cell, cell);
       }
     }
     g.endFill();
 
   }
+
 //
 //
 //
@@ -649,7 +682,6 @@ class Tyrian extends State {
   //bot.rotation += 0.1;
   //bot.x+=1;
   //}
-
 
 
   collisionHandler(Bullet bullet, Flight flight) {
