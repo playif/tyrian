@@ -1,7 +1,6 @@
 import "package:play_phaser/phaser.dart";
 
 
-
 main() {
   Game game = new Game(480, 800, WEBGL, '');
   game.state.add('tyrian', new Tyrian());
@@ -25,7 +24,7 @@ class Bar extends TileSprite {
   num maxValue;
 
   Bar(Game game, Entity entity, [num width = 10, num height = 5, int barType = 0, num maxValue = 10, Object key, Object frame])
-  : super(game, 0, 0, 12, 20, key, frame) {
+      : super(game, 0, 0, 12, 20, key, frame) {
     this.entity = entity;
     this.barType = barType;
     this.maxValue = maxValue;
@@ -36,8 +35,8 @@ class Bar extends TileSprite {
 
 class Flight extends Sprite implements Entity {
   num HP = 3,
-  MHP = 3,
-  team = 0;
+      MHP = 3,
+      team = 0;
   Group<Bullet> bullets;
 
 //  List<Weapon> weapons = new List<Weapon>();
@@ -61,7 +60,7 @@ class Flight extends Sprite implements Entity {
   }
 
   Flight(Game game, bullets, [Object key, Object frame])
-  : super(game, 0, 0, key, frame) {
+      : super(game, 0, 0, key, frame) {
     this.bullets = bullets;
     this.key = key;
   }
@@ -87,18 +86,18 @@ class Flight extends Sprite implements Entity {
     if (game.time.now >= nextFireTime) {
       nextFireTime = game.time.now + flightType.fireCD;
 
-      flightType.fire(this);
+      //flightType.fire(this);
 
     }
   }
 
-  resetFlight(num x, num y, FlightType type, [bool isEnemy=false]) {
+  resetFlight(num x, num y, FlightType type, [bool isEnemy = false]) {
     this.reset(x, y);
     this.loadTexture('tyrian', type.frame);
     this.isEnemy = isEnemy;
     this.flightType = type;
     this.MHP = this.HP = type.MHP;
-    this.nextFireTime=0;
+    this.nextFireTime = 0;
     //this._fire=fire;
     if (this.isEnemy) {
       this.rotation = Math.PI;
@@ -162,7 +161,7 @@ class Bullet extends Sprite {
   var target;
 
   Bullet(Game game, [Object key, Object frame])
-  : super(game, 0, 0, key, frame) {
+      : super(game, 0, 0, key, frame) {
     this.key = key;
     //game.physics.enable(this);
     //this.group=group;
@@ -179,10 +178,13 @@ class Bullet extends Sprite {
     this.flight = flight;
     this.target = target;
 
-    this.body.velocity.copyFrom(bulletType.velocity);
-    if (flight.isEnemy) {
-      this.body.velocity.y *= -1;
+    if (this.body != null) {
+      this.body.velocity.copyFrom(bulletType.velocity);
+      if (flight.isEnemy) {
+        this.body.velocity.y *= -1;
+      }
     }
+
 
   }
 
@@ -191,11 +193,21 @@ class Bullet extends Sprite {
 
 class FlightInfo {
   num x = 0,
-  y = 0;
+      y = 0;
   int FlightType = 0;
 
 }
 
+class Unit extends Sprite {
+  int hp=1;
+  int mv=1;
+  int ap=1;
+  int dp=1;
+  
+  Unit(Game game) : super(game) {
+    
+  }
+}
 
 class Tyrian extends State {
 
@@ -244,8 +256,11 @@ class Tyrian extends State {
     enemyBullets.forEachAlive((Sprite g) => g.kill());
   }
 
-  create() {
+  Graphics g;
+  Text t;
 
+  create() {
+    game.time.advancedTiming = true;
 //    sword2 = game.add.sprite(300, 300, "sword2");
 //    sword2.animations.add("hit", [0, 1, 2, 3, 4, 5]);
 //    sword2.animations.add("hit2", [6, 7, 8, 9, 10, 11]);
@@ -256,54 +271,58 @@ class Tyrian extends State {
     //game.physics.startSystem(Physics.ARCADE);
 
     game.stage.backgroundColor = 0x101010;
+//
+//    //  An explosion pool
+//    explosions = game.add.group();
+//    explosions.createMultiple(40, 'kaboom');
+//    explosions.forEach(setupInvader);
+//    //game.scale.s
+//
+//    playerFlights = game.add.group();
+//    playerBullets = game.add.group();
+//    enemyFlights = game.add.group();
+//    enemyBullets = game.add.group();
+//
+//    //playerFlights.enableBody = true;
+//    playerFlights.creator = () => new Flight(game, playerBullets, "tyrian")..anchor.setTo(0.5);
+//
+//    playerFlights.createMultiple(100);
+//
+//    //playerBullets.enableBody = true;
+//    playerBullets.creator = () => new Bullet(game, "tyrian");
+//    //    ..anchor.setTo(0.5)
+//    //    ..outOfBoundsKill = true
+//    //    ..checkWorldBounds = true;
+//    playerBullets.createMultiple(20);
+//
+//    //enemyFlights.enableBody = true;
+//    enemyFlights.creator = () => new Flight(game, enemyBullets, "tyrian")..anchor.setTo(0.5);
+//
+//    enemyFlights.createMultiple(100);
+//
+//    //enemyBullets.enableBody = true;
+//    enemyBullets.creator = () => new Bullet(game, "tyrian");
+//    //    ..anchor.setTo(0.5)
+//    //    ..outOfBoundsKill = true
+//    //    ..checkWorldBounds = true;
+//
+//    enemyBullets.createMultiple(20);
+//
+//
+//    for (int i = 0; i < 10; i++) {
+//      Flight flight = playerFlights.getFirstExists(false);
+//      flight.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(400, 800), FlightType.BasicFlight);
+//
+//      Flight enemy = enemyFlights.getFirstExists(false);
+//      enemy.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(0, 400), FlightType.BasicFlight, true);
+//    }
 
-    //  An explosion pool
-    explosions = game.add.group();
-    explosions.createMultiple(200, 'kaboom');
-    explosions.forEach(setupInvader);
-    //game.scale.s
 
-    playerFlights = game.add.group();
-    playerBullets = game.add.group();
-    enemyFlights = game.add.group();
-    enemyBullets = game.add.group();
-
-    playerFlights.enableBody = true;
-    playerFlights.creator = () => new Flight(game, playerBullets, "tyrian")
-      ..anchor.setTo(0.5);
-
-    playerFlights.createMultiple(100);
-
-    playerBullets.enableBody = true;
-    playerBullets.creator = () => new Bullet(game, "tyrian")
-      ..anchor.setTo(0.5)
-      ..outOfBoundsKill = true
-      ..checkWorldBounds = true;
-    playerBullets.createMultiple(1000);
-
-    enemyFlights.enableBody = true;
-    enemyFlights.creator = () => new Flight(game, enemyBullets, "tyrian")
-      ..anchor.setTo(0.5);
-
-    enemyFlights.createMultiple(100);
-
-    enemyBullets.enableBody = true;
-    enemyBullets.creator = () => new Bullet(game, "tyrian")
-      ..anchor.setTo(0.5)
-      ..outOfBoundsKill = true
-      ..checkWorldBounds = true;
-
-    enemyBullets.createMultiple(1000);
-
-    for (int i = 0;i < 20;i++) {
-
-
-      Flight flight = playerFlights.getFirstExists(false);
-      flight.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(400, 800), FlightType.BasicFlight);
-
-      Flight enemy = enemyFlights.getFirstExists(false);
-      enemy.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(0, 400), FlightType.BasicFlight, true);
-    }
+    g = game.add.graphics(0, 0);
+    
+    TextStyle ts=new TextStyle(fill:"white",stroke:"red",strokeThickness: 4);
+    
+    t = game.add.text(40, 40, "QQ", ts);
 
 
 //    Panel p = new VerticalPanel(game);
@@ -522,6 +541,14 @@ class Tyrian extends State {
     //    bot.body.velocity.setTo(1, 20);
     //
     //    cursors = game.input.keyboard.createCursorKeys();
+
+
+//    game.input.onDown.add((Pointer p,  b){
+//      print("here");
+//      resetHighlight((game.input.x / 60).floor(), (game.input.y / 60).floor(), 3);
+//    });
+
+
   }
 
   setupInvader(Sprite invader) {
@@ -531,33 +558,85 @@ class Tyrian extends State {
     invader.animations.add('kaboom');
   }
 
+  num addFlight = 0;
   update() {
-    game.physics.arcade.overlap(enemyBullets, playerFlights, collisionHandler);
-    game.physics.arcade.overlap(playerBullets, enemyFlights, collisionHandler);
+//    playerFlights.forEach((Flight f) {
+//      f.x += 1;
+//      if (f.x > 480) {
+//        f.x = 0;
+//      }
+//    }, true);
+//    enemyFlights.forEach((Flight f) {
+//      f.x += 1;
+//      if (f.x > 480) {
+//        f.x = 0;
+//      }
+//    }, true);
+//    //game.physics.arcade.overlap(enemyBullets, playerFlights, collisionHandler);
+//    //game.physics.arcade.overlap(playerBullets, enemyFlights, collisionHandler);
+//
+//
+//    if (game.time.now > addFlight) {
+//      addFlight = game.time.now + 2;
+//      for (int i = 0; i < 1; i++) {
+//        if (playerFlights.countLiving() < enemyFlights.countLiving()) {
+//          Flight flight = playerFlights.getFirstExists(false);
+//          if (flight != null) {
+//            flight.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(400, 800), FlightType.BasicFlight);
+//            //flight.body.velocity.setTo(game.rnd.integerInRange(0, 100) - 50, 0);
+//            //flight.body.collideWorldBounds = true;
+//            //flight.body.bounce.set(1.0);
+//          }
+//        } else {
+//          Flight enemy = enemyFlights.getFirstExists(false);
+//          if (enemy != null) {
+//            enemy.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(0, 400), FlightType.BasicFlight, true);
+//            //enemy.body.velocity.setTo(game.rnd.integerInRange(0, 100) - 50, 0);
+//            //enemy.body.collideWorldBounds = true;
+//            //enemy.body.bounce.set(1.0);
+//          }
+//        }
+//      }
+//    }
 
-    if (game.time.now > addFlight) {
-      addFlight = game.time.now + 20;
-      if (playerFlights.countLiving() < enemyFlights.countLiving()) {
-        Flight flight = playerFlights.getFirstExists(false);
-        if (flight != null) {
-          flight.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(400, 800), FlightType.BasicFlight);
-          flight.body.velocity.setTo(game.rnd.integerInRange(0, 100)-50, 0);
-          flight.body.collideWorldBounds = true;
-          flight.body.bounce.set(1.0);
-        }
-      }
-      else {
-        Flight enemy = enemyFlights.getFirstExists(false);
-        if (enemy != null) {
-          enemy.resetFlight(game.rnd.integerInRange(0, 480), game.rnd.integerInRange(0, 400), FlightType.BasicFlight, true);
-          enemy.body.velocity.setTo(game.rnd.integerInRange(0, 100)-50, 0);
-          enemy.body.collideWorldBounds = true;
-          enemy.body.bounce.set(1.0);
-        }
-      }
-
-
+    Pointer mouse = game.input.activePointer;
+    if (mouse.isDown) {
+      //
+      resetHighlight((mouse.x / 60).floor(), (mouse.y / 60).floor(), 3);
     }
+
+  }
+
+  resetHighlight(int x, int y, int range) {
+    g.clear();
+
+    g.lineWidth = 1;
+    //g.fillColor = 0xffffff;
+    g.lineColor = 0x00ffff;
+    g.lineAlpha = 1;
+    //g.alpha=0.5;
+    num cell = 60;
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        g.drawRect(cell * i, cell * j, cell, cell);
+      }
+    }
+
+    g.beginFill(0xffffff, 0.5);
+    int hr = range ~/ 2;
+    for (int i = -range; i <= range; i++) {
+      for (int j = -range; j <= range; j++) {
+        if ((i.abs() + j.abs()) > range) continue;
+        g.drawRect(cell * (x + i), cell * (y + j), cell, cell);
+      }
+    }
+    g.endFill();
+
+  }
+//
+//
+//
+//    }
 
 //    Point p = game.input.position;
 //    //game.input.mousePointer.justReleased()
@@ -566,12 +645,12 @@ class Tyrian extends State {
 //      sword2.revive();
 //      sword2.play("hit2", 16.66, false, true);
 //    }
-    //game.physics.arcade.collideSpriteVsGroup(bot,aliens);
-    //bot.rotation += 0.1;
-    //bot.x+=1;
-  }
+  //game.physics.arcade.collideSpriteVsGroup(bot,aliens);
+  //bot.rotation += 0.1;
+  //bot.x+=1;
+  //}
 
-  num addFlight = 0;
+
 
   collisionHandler(Bullet bullet, Flight flight) {
 
@@ -614,6 +693,7 @@ class Tyrian extends State {
   }
 
   render() {
+    // game.debug.text("FPS: ${game.time.fps}", 10, 20);
     //    game.debug.quadTree(game.physics.arcade.quadTree);
     //    game.debug.body(bot);
   }

@@ -61,6 +61,7 @@
       <excludeFolder url="file://E:/play_phaser/example/games/packages" />
       <excludeFolder url="file://E:/play_phaser/example/input/packages" />
       <excludeFolder url="file://E:/play_phaser/example/loader/packages" />
+      <excludeFolder url="file://E:/play_phaser/example/ninja_physics/packages" />
       <excludeFolder url="file://E:/play_phaser/example/packages" />
       <excludeFolder url="file://E:/play_phaser/example/particles/packages" />
       <excludeFolder url="file://E:/play_phaser/example/tilemaps/packages" />
